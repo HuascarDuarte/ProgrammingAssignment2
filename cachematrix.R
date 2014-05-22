@@ -11,17 +11,29 @@ makeCacheMatrix <- function(x = matrix()) {
 
 
 ## Function cashSolve will get a n x n matrix and it will return its inverse
-## It will verify if the matrix in the cache list is the same
+## Verify if the matrix in the cache is still the same
 ## It will verify if its inverse is already cached in the global list
 ## It will calculate the inverse and save it to the cache list
 ## It will return the inverse from the cache list
 
 cacheSolve <- function(x, ...) {
-    ## Verify if the matrix in the cache has changed or inverse is not in cache
-    if (any(x!= cache[[1]], is.na(cache[[2]]))) {
+    ## Define function to update cache
+    updateCache <- function(x) {
+        ## Move the new matrix to the cache, 
+        cache[[1]]<<-x
         ## Calculate inverse and save into cache
         cache[[2]]<<-solve(x)
     }
-    ## Return a matrix that is the inverse of 'x'
+    ## if matrix in the cache has different dimensions from x, update cache
+    if (!all(dim(x) == dim(cache[[1]]))) {
+        updateCache(x)
+    } else {
+        ## If x is different from cache or if inverse is not in cache, update
+        ## cache
+        if (any(x != cache[[1]], is.na(cache[[2]]))) {
+            updateCache(x)
+        }
+    }
+    ## Return the inverse in cache
     cache[[2]]
 }
