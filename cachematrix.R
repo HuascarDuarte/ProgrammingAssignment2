@@ -1,39 +1,79 @@
-## Put comments here that give an overall description of what your
-## functions do
+## Function makeCacheMatrix will receive as argument a matrix x and than it will
+## return a list that will contain the matrix and its inverse
 
-## Function makeCacheMatrix will create a list composed of two elements:
-## the original n x n matrix, and its inverse
-## List will be saved as a "global object" so it will be available in the 
-## in the environment as a cache
+## The list will be composed of 4 elements:
+## $get: Element $get contains a function that returns the contents of the 
+##       variable x which exists inside the list
+## $set: Element $set contains a function that will initilize the variables x
+##       (should) contain the original matrix) and xinv (should contain the 
+##       inverse of x). Both variables will exist only inside the instance of the list created.
+## $setinv: Element $setinv is a function that will populate xinv with its 
+##          argument which is expected to be x's inverse
+## $getinv: Element $getinv will return the contents of xinv stored in the list
+##
 makeCacheMatrix <- function(x = matrix()) {
-    cache<<-list(x, NA)
+    ## initialize variable xinv
+    xinv <- NULL
+    ## $set: variable with function to populate x (original matrix)
+    ## and xinv (inverse of the matrix) as variables that will exist only inside
+    ## the function and inside the list. The values of x and xinv will persist
+    ## inside the list
+    set <- function(y) {
+        x <<- y
+        xinv <<- NULL
+    }
+    
+    ## $get: variable with function to return the value of x which is the 
+    ## original matrix
+    get <- function() x
+    
+    ## $setinv: variable with function the will save its argument in the list
+    ## variable xinv. This argument should be the inverse of x.
+    setinv <- function(inv) xinv <<- inv
+    
+    ## $getinv: variable with function to return the value of xinv which is the
+    ## inverse of x
+    getinv <- function() xinv
+    
+    ## create and return the list. 
+    list(set = set, get = get,
+         setinv = setinv,
+         getinv = getinv)
 }
 
-
-## Function cashSolve will get a n x n matrix and it will return its inverse
-## Verify if the matrix in the cache is still the same
-## It will verify if its inverse is already cached in the global list
-## It will calculate the inverse and save it to the cache list
-## It will return the inverse from the cache list
-
+## Function cacheSolve receive as argument the list created by function 
+## makeCacheMatrix and will compute and return its inverse from the cache if it
+## was already stored in the list.
+##
+## It will verify if the inverse of the original matrix x is
+## already stored inside the list (calling a function defined in the element
+## $getinv).
+## If it is already there, 
+##     it will return the inverse which is already in the list. 
+## Otherwise, 
+##     it will get the original matrix from the list, calling a function
+##     defined in element $get of the list.
+##     it will calculate the inverse of the original matrix
+##     it will save the inverse of the matrix by calling a function defined
+##     in element $setinv of the list
+##     it will return the inverse matrix calculated
 cacheSolve <- function(x, ...) {
-    ## Define function to update cache
-    updateCache <- function(x) {
-        ## Move the new matrix to the cache, 
-        cache[[1]]<<-x
-        ## Calculate inverse and save into cache
-        cache[[2]]<<-solve(x)
+    ## Get the inverse original matrix from the list
+    m <- x$getinv()
+    ## If the inverse is already computed (not null)
+    if(!is.null(m)) {
+        ## Message saying the inveser comes from the cache
+        message("getting cached data")
+        ## Returns the inverse and exits
+        return(m)
     }
-    ## if matrix in the cache has different dimensions from x, update cache
-    if (!all(dim(x) == dim(cache[[1]]))) {
-        updateCache(x)
-    } else {
-        ## If x is different from cache or if inverse is not in cache, update
-        ## cache
-        if (any(x != cache[[1]], is.na(cache[[2]]))) {
-            updateCache(x)
-        }
-    }
-    ## Return the inverse in cache
-    cache[[2]]
+    ## If function hasn't exited, inverse hasn't been computed
+    ## Get the original matrix from list
+    data <- x$get()
+    ## Compute inverse
+    m <- solve(data)
+    ## Store inverse in the list
+    x$setinv(m)
+    ## Returns inveser
+    m
 }
